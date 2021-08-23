@@ -12,7 +12,7 @@ import { GraphComponent } from './ui/graph/graph.component';
 import { DataTableComponent } from './ui/data-table/data-table.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
-import { FilterComponent } from './ui/header/filter/filter.component';
+import { FilterCollectionComponent } from './ui/header/filter-collection/filter-collection.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +20,7 @@ import { FilterComponent } from './ui/header/filter/filter.component';
     HeaderComponent,
     GraphComponent,
     DataTableComponent,
-    FilterComponent
+    FilterCollectionComponent
   ],
   imports: [
     BrowserModule,
