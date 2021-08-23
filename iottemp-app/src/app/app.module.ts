@@ -12,7 +12,8 @@ import { GraphComponent } from './ui/graph/graph.component';
 import { DataTableComponent } from './ui/data-table/data-table.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
-import { FilterCollectionComponent } from './ui/header/filter-collection/filter-collection.component';
+import { FilterCollectionComponent } from './ui/filter-collection/filter-collection.component';
+import { FilterComponent } from './ui/filter/filter.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { FilterCollectionComponent } from './ui/header/filter-collection/filter-
     HeaderComponent,
     GraphComponent,
     DataTableComponent,
-    FilterCollectionComponent
+    FilterCollectionComponent,
+    FilterComponent
   ],
   imports: [
     BrowserModule,
