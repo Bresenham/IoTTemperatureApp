@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output } from '@angular/core';
+import { FilterType } from '../filter-collection/filter-collection.component'
 import { FormGroup, FormControl } from '@angular/forms';
 
 @Component({
@@ -8,12 +9,20 @@ import { FormGroup, FormControl } from '@angular/forms';
 })
 export class FilterComponent {
 
-  @Input() message: string = "";
+  @Input() filter!: FilterType;
 
-  constructor() { }
+  _FilterType = FilterType;
+
+  range = new FormGroup({
+    start: new FormControl(),
+    end: new FormControl()
+  });
+
+  constructor() {
+  }
 
   ngOnInit(): void {
-    
+
   }
 
 }
