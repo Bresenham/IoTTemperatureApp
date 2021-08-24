@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-
 import { EChartsOption } from 'echarts';
+
+import { DataEntry } from 'src/app/types/DataEntry';
+import { DataService } from '../../services/data.service';
 
 @Component({
   selector: 'app-graph',
@@ -9,25 +11,33 @@ import { EChartsOption } from 'echarts';
 })
 export class GraphComponent implements OnInit {
 
-  constructor() { }
+  entries: DataEntry[] = [];
 
-  chartOption: EChartsOption = {
-    xAxis: {
-      type: 'category',
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        data: [820, 932, 901, 934, 1290, 1330, 1320],
-        type: 'line',
-      },
-    ],
-  };
+  constructor(private dataService: DataService) { }
+
+  chartOption!: EChartsOption;
 
   ngOnInit(): void {
+    this.entries = this.dataService.getEntries();
+
+    const date_times: string[] = this.entries.map(e => e.datetime);
+    const values: number[] = this.entries.map(e => e.value);
+
+    this.chartOption = {
+      xAxis: {
+        type: 'category',
+        data: date_times,
+      },
+      yAxis: {
+        type: 'value',
+      },
+      series: [
+        {
+          data: values,
+          type: 'line',
+        },
+      ],
+    };
   }
 
 }
