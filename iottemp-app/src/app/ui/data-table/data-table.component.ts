@@ -1,21 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-
-import { formatDate } from '@angular/common';
-
-export interface DataEntry {
-  id: number;
-  datetime: string;
-  sensor_id: number;
-  value: number;
-}
-
-const TABLE_DATA: DataEntry[] = [
-
-  { id: 1, datetime: formatDate(Date.now(), 'dd/MM/yyyy HH:mm:ss', 'en-US'), sensor_id: 5820205, value: 2502 },
-  { id: 2, datetime: formatDate(Date.now(), 'dd/MM/yyyy HH:mm:ss', 'en-US'), sensor_id: 5793410, value: 2242 },
-  { id: 3, datetime: formatDate(Date.now(), 'dd/MM/yyyy HH:mm:ss', 'en-US'), sensor_id: 5820205, value: 2729 },
-
-];
+import { DataEntry } from 'src/app/types/DataEntry';
+import { DataService } from '../../services/data.service';
 
 @Component({
   selector: 'app-data-table',
@@ -24,13 +9,14 @@ const TABLE_DATA: DataEntry[] = [
 })
 export class DataTableComponent implements OnInit {
 
-  displayedColumns: string[] = [ "datetime", "sensor_id", "value" ];
+  entries: DataEntry[] = [];
 
-  dataSource = TABLE_DATA;
+  displayedColumns: string[] = [ "datetime", "sensor_id", "sensor_type", "value" ];
 
-  constructor() { }
+  constructor(private dataService: DataService) { }
 
   ngOnInit(): void {
+    this.entries = this.dataService.getEntries();
   }
 
 }

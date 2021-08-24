@@ -1,4 +1,4 @@
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<table mat-table [dataSource]="entries" class="mat-elevation-z8">
 
     <!--- Note that these columns can be defined in any order.
             The actual rendered columns are set as a property on the row definition" -->
@@ -12,7 +12,13 @@
     <!-- Weight Column -->
     <ng-container matColumnDef="sensor_id">
         <th mat-header-cell *matHeaderCellDef> Sensor ID </th>
-        <td mat-cell *matCellDef="let element"> {{element.sensor_id}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.sensor.id}} </td>
+    </ng-container>
+
+    <!-- Weight Column -->
+    <ng-container matColumnDef="sensor_type">
+        <th mat-header-cell *matHeaderCellDef> Sensor Type </th>
+        <td mat-cell *matCellDef="let element"> {{element.sensor.type}} </td>
     </ng-container>
 
     <!-- Symbol Column -->
