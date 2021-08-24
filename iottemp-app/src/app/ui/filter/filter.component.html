@@ -1,4 +1,4 @@
-<div *ngIf="filter === _FilterType.SensorSelectFilter" class="sensorFilterDiv">
+<div *ngIf="filter === _FilterType.SensorSelectFilter" class="distance">
     <mat-form-field>
         <mat-label>Cars</mat-label>
         <select matNativeControl required>
@@ -14,7 +14,7 @@
         </button>
     </div>
 </div>
-<div *ngIf="filter === _FilterType.DateRangeFilter" class="dateFilterDiv">
+<div *ngIf="filter === _FilterType.DateRangeFilter" class="distance">
     <mat-form-field>
         <mat-label>Enter a date range to filter data</mat-label>
         <mat-date-range-input [formGroup]="range" [rangePicker]="picker">

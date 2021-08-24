@@ -1,15 +1,4 @@
-<div #dynamicFilters></div>
-<button mat-raised-button [matMenuTriggerFor]="menu" color="accent">
-    <mat-icon>filter_alt</mat-icon>
-    Add filter
-</button>
-<mat-menu #menu="matMenu">
-    <button mat-menu-item (click)="onAddDateRangeFilter()">
-        <mat-icon>calendar_today</mat-icon>
-        Date Range
-    </button>
-    <button mat-menu-item (click)="onAddSensorSelectFilter()">
-        <mat-icon>device_thermostat</mat-icon>
-        Sensor
-    </button>
-</mat-menu>
+Filters:
+<div style="display: inline-block; margin-right: 1rem;"></div>
+<app-filter [filter]="_FilterType.DateRangeFilter"></app-filter>
+<app-filter [filter]="_FilterType.SensorSelectFilter"></app-filter>

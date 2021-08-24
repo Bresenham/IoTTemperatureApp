@@ -12,25 +12,9 @@ export enum FilterType {
 })
 export class FilterCollectionComponent implements OnInit {
 
-  filters : Array<ComponentRef<FilterComponent>> = [];
-
-  @ViewChild('dynamicFilters', { read: ViewContainerRef }) dynamicInsert!: ViewContainerRef;
+  _FilterType = FilterType;
 
   constructor(private resolver: ComponentFactoryResolver) { }
-
-  onAddDateRangeFilter() {
-    const factory: ComponentFactory<FilterComponent> = this.resolver.resolveComponentFactory(FilterComponent);
-    const filter = this.dynamicInsert.createComponent<FilterComponent>(factory);
-    filter.instance.filter = FilterType.DateRangeFilter;
-    this.filters.push(filter);
-  }
-
-  onAddSensorSelectFilter() {
-    const factory: ComponentFactory<FilterComponent> = this.resolver.resolveComponentFactory(FilterComponent);
-    const filter = this.dynamicInsert.createComponent<FilterComponent>(factory);
-    filter.instance.filter = FilterType.SensorSelectFilter;
-    this.filters.push(filter);
-  }
 
   ngOnInit(): void {
 
