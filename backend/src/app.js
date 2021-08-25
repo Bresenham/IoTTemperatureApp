@@ -15,11 +15,51 @@ mongoose.connect("mongodb://127.0.0.1:27017/",{
 
 const app = express()
 const port = 3000
-
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-  })
   
 app.listen(port, () => {
-console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`Example app listening at http://localhost:${port}`)
+})
+
+const SensorType = Object.freeze({
+  Temperature: "Temperature"
+});
+
+const SensorSchema = new mongoose.Schema({
+  id: Number,
+  type: Object.values(SensorType)
+});
+
+Object.assign(SensorSchema.statics, { SensorType });
+
+const DataEntrySchema = new mongoose.Schema({
+  datetime: String,
+  sensor: SensorSchema,
+  value: Number
+});
+
+const DataEntry = mongoose.model('DataEntry', DataEntrySchema);
+const Sensor = mongoose.model('Sensor', SensorSchema);
+
+const sensor1 = new Sensor( { id: 528201, type: SensorType.Temperature } );
+sensor1.save();
+
+const entry1 = new DataEntry(
+  {
+    datetime: Date.now(),
+    sensor: sensor1,
+    value: 2502
+  }
+);
+entry1.save();
+
+app.get('/sensors', (req, res) => {
+  Sensor.find({}, function(err, sensors) {
+    res.send(sensors);
+  });
+})
+
+app.get('/entries', (req, res) => {
+  DataEntry.find({}, function(err, entries) {
+    res.send(entries);
+  });
 })

@@ -1,5 +1,5 @@
 export enum SensorType {
-    Temperature
+    Temperature = "Temperature"
 }
 
 export interface Sensor {
