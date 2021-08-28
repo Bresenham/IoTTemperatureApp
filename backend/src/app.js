@@ -1,18 +1,13 @@
 const cors = require('cors')
 const express = require('express')
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 
 // npm start
 // docker run -d -p 27017:27017 --name m1 mongo
 
-mongoose.connect("mongodb://127.0.0.1:27017/",{
-        useCreateIndex:true,
-        useNewUrlParser: true,
-        useUnifiedTopology: true}).then(()=> {
-          console.log('Database Successfully Connected')},
-          error =>{
-            console.log(error)}
-        );
+const fill_default_data = process.env.TEST;
 
 const app = express()
 const port = 3000
@@ -34,6 +29,7 @@ app.use(cors({
 
 const sensorRouter = require('./routes/sensors');
 const dataRouter = require('./routes/data');
+const DataEntry = require('./models/dataEntry');
 
 app.use('/sensor', sensorRouter);
 app.use('/data', dataRouter);
@@ -42,18 +38,21 @@ app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
 
-/*
+mongoose.connect("mongodb://127.0.0.1:27017/",{
+        useCreateIndex:true,
+        useNewUrlParser: true,
+        useUnifiedTopology: true}
+).then(() => {
+    console.log('Database Successfully Connected')
+    if(fill_default_data) {
 
-const sensor1 = new Sensor( { id: 528201, type: SensorType.Temperature } );
-sensor1.save();
+      DataEntry.create(
+        JSON.parse(fs.readFileSync(path.resolve(__dirname, 'test_data.json'), 'utf8'))
+      );
 
-const entry1 = new DataEntry(
-  {
-    datetime: Date.now(),
-    sensor: sensor1,
-    value: 2502
+    }
+  }, error => {
+    console.log(error)
   }
 );
-entry1.save();
 
-*/

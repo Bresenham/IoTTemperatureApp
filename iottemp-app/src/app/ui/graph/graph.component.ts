@@ -20,26 +20,26 @@ export class GraphComponent implements OnInit {
   ngOnInit(): void {
     this.dataService.getEntries().subscribe(data => {
       this.entries = data;
-    });
 
-    const date_times: string[] = this.entries.map(e => e.datetime);
-    const values: number[] = this.entries.map(e => e.value);
+      const date_times: string[] = this.entries.map(e => e.datetime);
+      const values: number[] = this.entries.map(e => e.value);
 
-    this.chartOption = {
-      xAxis: {
-        type: 'category',
-        data: date_times,
-      },
-      yAxis: {
-        type: 'value',
-      },
-      series: [
-        {
-          data: values,
-          type: 'line',
+      this.chartOption = {
+        xAxis: {
+          type: 'category',
+          data: date_times,
         },
-      ],
-    };
+        yAxis: {
+          type: 'value',
+        },
+        series: [
+          {
+            data: values,
+            type: 'line',
+          },
+        ],
+      };
+    });
   }
 
 }
