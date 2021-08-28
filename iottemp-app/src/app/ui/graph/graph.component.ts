@@ -18,7 +18,9 @@ export class GraphComponent implements OnInit {
   chartOption!: EChartsOption;
 
   ngOnInit(): void {
-    this.entries = this.dataService.getEntries();
+    this.dataService.getEntries().subscribe(data => {
+      this.entries = data;
+    });
 
     const date_times: string[] = this.entries.map(e => e.datetime);
     const values: number[] = this.entries.map(e => e.value);

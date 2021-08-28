@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgxEchartsModule } from 'ngx-echarts';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule  } from '@angular/common/http'
 
 import { AppRoutingModule } from './app-routing.module';
 import { HeaderComponent } from './ui/header/header.component';
@@ -31,6 +32,7 @@ import { FilterComponent } from './ui/filter/filter.component';
     MaterialModule,
     ReactiveFormsModule,
     FormsModule,
+    HttpClientModule,
     NgxEchartsModule.forRoot({
       /**
        * This will import all modules from echarts.

@@ -16,7 +16,9 @@ export class DataTableComponent implements OnInit {
   constructor(private dataService: DataService) { }
 
   ngOnInit(): void {
-    this.entries = this.dataService.getEntries();
+    this.dataService.getEntries().subscribe(data => {
+      this.entries = data;
+    });
   }
 
 }

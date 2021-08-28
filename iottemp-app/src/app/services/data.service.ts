@@ -1,40 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'
+import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http'
+
 import { formatDate } from '@angular/common';
 
 import { DataEntry } from '../types/DataEntry';
 import { SensorType } from '../types/Sensor';
-
-const Entries : DataEntry[] = [];
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
 
-  constructor() {
-    Entries.push(
-      {
-        id: 1,
-        datetime: formatDate(Date.now(), 'dd/MM/yyyy HH:mm:ss', 'en-US'),
-        sensor: {
-          id: 573015,
-          type: SensorType.Temperature
-        },
-        value: 2502
-      },
-      {
-        id: 2,
-        datetime: formatDate(Date.now(), 'dd/MM/yyyy HH:mm:ss', 'en-US'),
-        sensor: {
-          id: 219581,
-          type: SensorType.Temperature
-        },
-        value: 2752
-      },
-    )
-  }
+  constructor(private http: HttpClient) {}
 
-  getEntries() : DataEntry[] {
-    return Entries;
+  getEntries() : Observable<Array<DataEntry>> {
+    return this.http.get<Array<DataEntry>>('http://localhost:3000/data')
   }
 }

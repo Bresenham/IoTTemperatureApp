@@ -1,3 +1,4 @@
+const cors = require('cors')
 const express = require('express')
 const mongoose = require('mongoose');
 
@@ -21,6 +22,13 @@ const dataRouter = require('./routes/data');
 
 app.use('/sensor', sensorRouter);
 app.use('/data', dataRouter);
+
+var corsOptions = {
+  origin: 'http://localhost:4200',
+  optionsSuccessStatus: 200
+}
+
+app.use(cors(corsOptions))
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
