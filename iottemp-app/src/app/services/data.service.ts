@@ -5,7 +5,6 @@ import { HttpClient } from '@angular/common/http'
 import { formatDate } from '@angular/common';
 
 import { DataEntry } from '../types/DataEntry';
-import { SensorType } from '../types/Sensor';
 
 @Injectable({
   providedIn: 'root'

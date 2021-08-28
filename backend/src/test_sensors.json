@@ -1,0 +1,10 @@
+[
+    {
+        "_id": 1,
+        "type": "Temperature"
+    },
+    {
+        "_id": 2,
+        "type": "Temperature"
+    }
+]

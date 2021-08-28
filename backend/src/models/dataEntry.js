@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const SensorSchema = require('./sensor');
+const Sensor = require('../models/sensor');
 
 const DataEntrySchema = new mongoose.Schema({
-    datetime: { type: String, required: true },
-    sensor: { type: SensorSchema, required: true },
-    value: { type: Number, required: true }
+    datetime: { type: mongoose.Schema.Types.String, required: true },
+    sensor: { type: mongoose.Schema.Types.ObjectId, ref: 'Sensor', required: true },
+    value: { type: mongoose.Schema.Types.Number, required: true }
 });
   
 const DataEntry = mongoose.model('DataEntry', DataEntrySchema);

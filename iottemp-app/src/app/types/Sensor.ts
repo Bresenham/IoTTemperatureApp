@@ -1,8 +1,4 @@
-export enum SensorType {
-    Temperature = "Temperature"
-}
-
 export interface Sensor {
-    id: number,
-    type: SensorType
+    _id: number,
+    type: string
 }

@@ -30,6 +30,7 @@ app.use(cors({
 const sensorRouter = require('./routes/sensors');
 const dataRouter = require('./routes/data');
 const DataEntry = require('./models/dataEntry');
+const Sensor = require('./models/sensor');
 
 app.use('/sensor', sensorRouter);
 app.use('/data', dataRouter);
@@ -46,8 +47,12 @@ mongoose.connect("mongodb://127.0.0.1:27017/",{
     console.log('Database Successfully Connected')
     if(fill_default_data) {
 
+      Sensor.create(
+        JSON.parse(fs.readFileSync(path.resolve(__dirname, 'test_sensors.json'), 'utf8'))
+      );
+
       DataEntry.create(
-        JSON.parse(fs.readFileSync(path.resolve(__dirname, 'test_data.json'), 'utf8'))
+        JSON.parse(fs.readFileSync(path.resolve(__dirname, 'test_data_entries.json'), 'utf8'))
       );
 
     }

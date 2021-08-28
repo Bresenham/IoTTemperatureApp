@@ -1,19 +1,15 @@
 [
     {
-        "id": 1,
         "datetime": "28/08/2021 16:01:00",
         "sensor": {
-            "id": 1,
-            "type": "Temperature"
+            "_id": 1
         },
         "value": 2502
     },
     {
-        "id": 2,
         "datetime": "28/08/2021 16:02:00",
         "sensor": {
-            "id": 2,
-            "type": "Temperature"
+            "_id": 2
         },
         "value": 2252
     }
