@@ -1,15 +1,15 @@
-const cors = require('cors')
-const express = require('express')
+const cors = require('cors');
+const express = require('express');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 
-// npm start
-// docker run -d -p 27017:27017 --name m1 mongo
-
 const fill_default_data = process.env.TEST;
 
-const app = express()
+const app = express();
+app.use(bodyParser.json())
+
 const port = 3000
 
 // Set up CORS
