@@ -1,0 +1,1 @@
+idf_component_register(SRCS "main.c" "spi_handler.c" INCLUDE_DIRS "../include")
