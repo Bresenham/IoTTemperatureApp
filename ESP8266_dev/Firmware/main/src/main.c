@@ -23,11 +23,62 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "driver/i2c.h"
+
 #include "../include/wifi_config.h"
 
+#define I2C_MASTER_SDA_GPIO     4
+#define I2C_MASTER_SCK_GPIO     5
+
+#define BMP280_I2C_WRITE_ADDR   (0b11101110)
+#define BMP280_I2C_READ_ADDR    (0b11101111)
+
+#define BMP280_REG_ADDR_ID      (0xD0)
 
 TaskHandle_t wifi_scan_task_hndl = NULL;
 TaskHandle_t wifi_connect_task_hndl = NULL;
+TaskHandle_t i2c_bmp280_task_hndl = NULL;
+
+static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
+
+    const bool slave_ack_en = true;
+
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = I2C_MASTER_SDA_GPIO;
+    conf.sda_pullup_en = 1;
+    conf.scl_io_num = I2C_MASTER_SCK_GPIO;
+    conf.scl_pullup_en = 1;
+    conf.clk_stretch_tick = 300; // 300 ticks, Clock stretch is about 210us, you can make changes according to the actual situation.
+
+    ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, conf.mode));
+    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &conf));
+
+    while(true) {
+
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, BMP280_I2C_WRITE_ADDR, slave_ack_en);
+        i2c_master_write_byte(cmd, BMP280_REG_ADDR_ID, slave_ack_en);
+
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, BMP280_I2C_READ_ADDR, slave_ack_en);
+
+        uint8_t bmp280_id = 0x00;
+        i2c_master_read(cmd, &bmp280_id, 1, I2C_MASTER_LAST_NACK);
+
+        const esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+        if(ret != ESP_OK) {
+            printf("FAILED I2C!\n");
+        }
+
+        i2c_cmd_link_delete(cmd);
+
+        printf("BMP 280 ID: %d\n", bmp280_id);
+
+        vTaskDelay(5000 / portTICK_RATE_MS);
+    }
+}
 
 static void ICACHE_FLASH_ATTR event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
 
@@ -51,6 +102,8 @@ static void ICACHE_FLASH_ATTR event_handler(void* arg, esp_event_base_t event_ba
         ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
 
         vTaskSuspend(wifi_connect_task_hndl);
+
+        xTaskCreate(i2c_bmp280_task, "i2c_bmp280_task", 1024 * 8, NULL, 1, &i2c_bmp280_task_hndl);
     }
 }
 
