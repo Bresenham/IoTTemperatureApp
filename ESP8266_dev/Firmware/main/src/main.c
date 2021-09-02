@@ -25,33 +25,28 @@
 
 #include "../include/wifi_config.h"
 
-static void ICACHE_FLASH_ATTR wifi_connect_task(void *param);
 
-TaskHandle_t wifi_scan_task_hndl;
-TaskHandle_t wifi_connect_task_hndl;
-
-static void ICACHE_FLASH_ATTR start_wifi_connect_task() {
-
-    xTaskCreate(wifi_connect_task, "wifi_connect_task", 1024 * 8, NULL, 1, &wifi_connect_task_hndl);
-
-}
+TaskHandle_t wifi_scan_task_hndl = NULL;
+TaskHandle_t wifi_connect_task_hndl = NULL;
 
 static void ICACHE_FLASH_ATTR event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
 
-        printf("Disconnected, retry to connect to the AP\n");
+        printf("Disconnected, retry to connect to the AP '%s'\n", SSID);
 
         if( eTaskGetState(wifi_connect_task_hndl) == eSuspended ) {
+
             ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
-            printf("Resume WiFi connect Task\n");
+
+            printf("Resume WiFi connect task\n");
             vTaskResume(wifi_connect_task_hndl);
         }
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
 
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-		printf("got ip:%s\n", ip4addr_ntoa(&event->ip_info.ip));
+		printf("Got ip:%s\n", ip4addr_ntoa(&event->ip_info.ip));
 
         ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
 
@@ -71,6 +66,7 @@ static void ICACHE_FLASH_ATTR wifi_connect_task(void *param) {
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
     while(true) {
+
         const esp_err_t ret = esp_wifi_connect();
         printf("esp_wifi_connect returned '");
         switch(ret) {
@@ -96,7 +92,6 @@ static void ICACHE_FLASH_ATTR wifi_connect_task(void *param) {
 
         vTaskDelay(7500 / portTICK_RATE_MS);
     }
-
 }
 
 static void ICACHE_FLASH_ATTR wifi_scan_task(void *param) {
@@ -110,34 +105,42 @@ static void ICACHE_FLASH_ATTR wifi_scan_task(void *param) {
 
     uint16_t amount_of_records;
     wifi_ap_record_t records[25];
+    
+    while(true) {
 
-    ESP_ERROR_CHECK( esp_wifi_scan_start(&wifi_scan_config, true) );
-    ESP_ERROR_CHECK( esp_wifi_scan_get_ap_records(&amount_of_records, records) );
+        bool detected_config_ssid = false;
 
-    bool detected_config_ssid = false;
+        ESP_ERROR_CHECK( esp_wifi_scan_start(&wifi_scan_config, true) );
+        ESP_ERROR_CHECK( esp_wifi_scan_get_ap_records(&amount_of_records, records) );
 
-    for(uint16_t i = 0; i < amount_of_records; ++i) {
+        printf("WIFI SCAN RESULTS:\n");
 
-        const wifi_ap_record_t record = records[i];
-        printf("RECORD %d:\n", i + 1);
-        printf("\tSSID: %s\n", record.ssid);
-        printf("\tCHANNEL: %d\n", record.primary);
-        printf("\n");
+        for(uint16_t i = 0; i < amount_of_records; ++i) {
 
-        if( strcmp(SSID, (char*)record.ssid) == 0 ) {
-            detected_config_ssid = true;
+            const wifi_ap_record_t record = records[i];
+            printf("%d: SSID: %s\n", i + 1, record.ssid);
+            printf("\tCHANNEL: %d\n", record.primary);
+            printf("\n");
+
+            if( strcmp(SSID, (char*)record.ssid) == 0 ) {
+                detected_config_ssid = true;
+            }
         }
+
+        if(detected_config_ssid) {
+            printf("FOUND WIFI WITH SSID  '%s'!\n", SSID);
+
+            if(wifi_connect_task_hndl == NULL) {
+                xTaskCreate(wifi_connect_task, "wifi_connect_task", 1024 * 8, NULL, 1, &wifi_connect_task_hndl);
+            } else {
+                vTaskResume(wifi_connect_task_hndl);
+            }
+
+            vTaskSuspend(wifi_scan_task_hndl);
+        }
+
+        vTaskDelay(7500 / portTICK_RATE_MS);
     }
-
-    if(detected_config_ssid) {
-        start_wifi_connect_task();
-    } else {
-        printf("WIFI SCAN DIDN'T RETURN WIFI WITH SSID %s -> EXIT!\n", SSID);
-    }
-
-    vTaskSuspend(wifi_scan_task_hndl);
-    vTaskDelete(wifi_scan_task_hndl);
-
 }
 
 void app_main() {
@@ -157,5 +160,5 @@ void app_main() {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    xTaskCreate(wifi_scan_task, "wifi_scan_task", 1024 * 4, NULL, 1, wifi_scan_task_hndl);
+    xTaskCreate(wifi_scan_task, "wifi_scan_task", 1024 * 4, NULL, 1, &wifi_scan_task_hndl);
 }
