@@ -103,7 +103,9 @@ static void ICACHE_FLASH_ATTR event_handler(void* arg, esp_event_base_t event_ba
 
         vTaskSuspend(wifi_connect_task_hndl);
 
-        xTaskCreate(i2c_bmp280_task, "i2c_bmp280_task", 1024 * 8, NULL, 1, &i2c_bmp280_task_hndl);
+        if( i2c_bmp280_task_hndl == NULL ) {
+            xTaskCreate(i2c_bmp280_task, "i2c_bmp280_task", 1024 * 8, NULL, 1, &i2c_bmp280_task_hndl);
+        }
     }
 }
 

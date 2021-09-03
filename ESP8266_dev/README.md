@@ -1,5 +1,7 @@
 ## ESP8266 Installation & Setup
 
+<img src="Images/ESP8266_BMP280_dev_board.jpg" width="480">
+
 ### Install Python 2.7 (required for flashing over serial port)
 
 - `$ sudo apt-get install python`
