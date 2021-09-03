@@ -27,21 +27,99 @@
 
 #include "../include/wifi_config.h"
 
-#define I2C_MASTER_SDA_GPIO     4
-#define I2C_MASTER_SCK_GPIO     5
+#define I2C_MASTER_SDA_GPIO                     4
+#define I2C_MASTER_SCK_GPIO                     5
 
-#define BMP280_I2C_WRITE_ADDR   (0b11101110)
-#define BMP280_I2C_READ_ADDR    (0b11101111)
+#define BMP280_I2C_WRITE_ADDR                   (0b11101110)
+#define BMP280_I2C_READ_ADDR                    (0b11101111)
 
-#define BMP280_REG_ADDR_ID      (0xD0)
+#define BMP280_REG_ADDR_ID                      (0xD0)
+
+#define BMP280_REG_ADDR_STATUS                  (0xF3)
+#define BMP280_STATUS_MEASURING                 (1 << 3)
+
+#define BMP280_REG_ADDR_CTRL_MEAS               (0xF4)
+#define BMP280_REG_CTRL_MEAS_TEMP_OVERSAMPLING  (0xE0)
+#define BMP280_REG_CTRL_MEAS_PRESSURE_SKIP      (0x00)
+#define BMP280_REG_CTRL_MEAS_NORMAL_MODE        (0x03)
+
+#define BMP280_REG_ADDR_CONFIG                  (0xF5)
+#define BMP280_REG_CONFIG_STANDBY_2000MS        (0xC0)
+
+#define BMP280_REG_ADDR_TRIMMING_VALUES_START   (0x88)
+
+#define BMP280_REG_ADDR_TEMP_MSB                (0xFA)
+#define BMP280_REG_ADDR_TEMP_LSB                (0xFB)
+#define BMP280_REG_ADDR_TEMP_XLSB               (0xFC)
+
+#define BMP280_SLAVE_ACK_EN         (true)
 
 TaskHandle_t wifi_scan_task_hndl = NULL;
 TaskHandle_t wifi_connect_task_hndl = NULL;
 TaskHandle_t i2c_bmp280_task_hndl = NULL;
 
-static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
+/**
+ * Code from https://cdn-shop.adafruit.com/datasheets/BST-BMP280-DS001-11.pdf
+ */
+static int32_t ICACHE_FLASH_ATTR calculate_temp_from_raw_value(int16_t dig_T1, uint16_t dig_T2, uint16_t dig_T3, uint32_t value) {
 
-    const bool slave_ack_en = true;
+    int32_t part1 = (value >> 3) - (dig_T1 << 1);
+    int32_t var1  = (part1 * dig_T2) >> 11;
+
+    int32_t part2 = (value >> 4) - dig_T1;
+    int32_t var2  = (((part2 * part2) >> 12) * dig_T3 ) >> 14;
+
+    int32_t t_fine = var1 + var2;
+    
+    return (t_fine * 5 + 128) >> 8;
+}
+
+
+static void ICACHE_FLASH_ATTR i2c_bmp280_read_reg(uint8_t reg_start_addr, uint8_t read_length, uint8_t *ret_param) {
+
+    i2c_cmd_handle_t read_cmd = i2c_cmd_link_create();
+    i2c_master_start(read_cmd);
+    i2c_master_write_byte(read_cmd, BMP280_I2C_WRITE_ADDR, BMP280_SLAVE_ACK_EN);
+    i2c_master_write_byte(read_cmd, reg_start_addr, BMP280_SLAVE_ACK_EN);
+
+    i2c_master_start(read_cmd);
+    i2c_master_write_byte(read_cmd, BMP280_I2C_READ_ADDR, BMP280_SLAVE_ACK_EN);
+
+    for(uint8_t i = 0; i < read_length; ++i) {
+
+        if( i == read_length - 1 ) {
+            i2c_master_read(read_cmd, &ret_param[i], 1, I2C_MASTER_NACK);
+        } else {
+            i2c_master_read(read_cmd, &ret_param[i], 1, I2C_MASTER_ACK);
+        }
+    }
+
+    const esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, read_cmd, 1000 / portTICK_RATE_MS);
+    if(ret != ESP_OK) {
+        printf("FAILED I2C BMP280 READ CMD [%d]\n", reg_start_addr);
+    }
+
+    i2c_cmd_link_delete(read_cmd);
+}
+
+static void ICACHE_FLASH_ATTR i2c_bmp280_write_reg(uint8_t reg_addr, uint8_t reg_data) {
+
+    i2c_cmd_handle_t write_cmd = i2c_cmd_link_create();
+    i2c_master_start(write_cmd);
+    i2c_master_write_byte(write_cmd, BMP280_I2C_WRITE_ADDR, BMP280_SLAVE_ACK_EN);
+    i2c_master_write_byte(write_cmd, reg_addr, BMP280_SLAVE_ACK_EN);
+    i2c_master_write_byte(write_cmd, reg_data, BMP280_SLAVE_ACK_EN);
+    i2c_master_stop(write_cmd);
+
+    const esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, write_cmd, 1000 / portTICK_RATE_MS);
+    if(ret != ESP_OK) {
+        printf("FAILED I2C BMP280 WRITE CMD [%d -> %d]\n", reg_addr, reg_data);
+    }
+
+    i2c_cmd_link_delete(write_cmd);
+}
+
+static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
 
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
@@ -54,29 +132,45 @@ static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
     ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, conf.mode));
     ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &conf));
 
+    uint8_t bmp280_id;
+    i2c_bmp280_read_reg(BMP280_REG_ADDR_ID, 1, &bmp280_id);
+
+    printf("BMP 280 ID: %d\n", bmp280_id);
+
+    i2c_bmp280_write_reg(BMP280_REG_ADDR_CTRL_MEAS, BMP280_REG_CTRL_MEAS_TEMP_OVERSAMPLING | BMP280_REG_CTRL_MEAS_PRESSURE_SKIP | BMP280_REG_CTRL_MEAS_NORMAL_MODE);
+    i2c_bmp280_write_reg(BMP280_REG_ADDR_CONFIG, BMP280_REG_CONFIG_STANDBY_2000MS);
+
+    uint8_t dig_Ts[6];
+    i2c_bmp280_read_reg(BMP280_REG_ADDR_TRIMMING_VALUES_START, 6, dig_Ts);
+
+    const uint8_t dig_T1_lsb = dig_Ts[0];
+    const uint8_t dig_T1_msb = dig_Ts[1];
+    const uint16_t dig_T1 = (dig_T1_msb << 8) | dig_T1_lsb;
+
+    const uint8_t dig_T2_lsb = dig_Ts[2];
+    const uint8_t dig_T2_msb = dig_Ts[3];
+    const int16_t dig_T2 = (int16_t)( (dig_T2_msb << 8) | dig_T2_lsb );
+
+    const uint8_t dig_T3_lsb = dig_Ts[4];
+    const uint8_t dig_T3_msb = dig_Ts[5];
+    const int16_t dig_T3 = (int16_t)( (dig_T3_msb << 8) | dig_T3_lsb );
+
+    printf("dig_T1: %hu\ndig_T2:%hi\ndig_T3: %hi\n", dig_T1, dig_T2, dig_T3);
+
     while(true) {
 
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, BMP280_I2C_WRITE_ADDR, slave_ack_en);
-        i2c_master_write_byte(cmd, BMP280_REG_ADDR_ID, slave_ack_en);
+        uint8_t t_raw[3];
+        i2c_bmp280_read_reg(BMP280_REG_ADDR_TEMP_MSB, 3, t_raw);
 
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, BMP280_I2C_READ_ADDR, slave_ack_en);
+        const uint32_t temp_raw = (uint32_t)(((t_raw[0] << 16) | (t_raw[1] << 8) | t_raw[2]) >> 4);
 
-        uint8_t bmp280_id = 0x00;
-        i2c_master_read(cmd, &bmp280_id, 1, I2C_MASTER_LAST_NACK);
+        printf("TEMP RAW: %d\n", temp_raw);
 
-        const esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
-        if(ret != ESP_OK) {
-            printf("FAILED I2C!\n");
-        }
+        const int32_t temp = calculate_temp_from_raw_value(dig_T1, dig_T2, dig_T3, temp_raw);
 
-        i2c_cmd_link_delete(cmd);
+        printf("TEMP: %d\n", temp);
 
-        printf("BMP 280 ID: %d\n", bmp280_id);
-
-        vTaskDelay(5000 / portTICK_RATE_MS);
+        vTaskDelay(2000 / portTICK_RATE_MS);
     }
 }
 
@@ -122,28 +216,7 @@ static void ICACHE_FLASH_ATTR wifi_connect_task(void *param) {
 
     while(true) {
 
-        const esp_err_t ret = esp_wifi_connect();
-        printf("esp_wifi_connect returned '");
-        switch(ret) {
-            case ESP_ERR_WIFI_NOT_INIT: {
-                printf("ESP_ERR_WIFI_NOT_INIT'\n");
-            } break;
-            case ESP_ERR_WIFI_NOT_STARTED: {
-                printf("ESP_ERR_WIFI_NOT_START'\n");
-            } break;
-            case ESP_ERR_WIFI_CONN: {
-                printf("ESP_ERR_WIFI_CONN'\n");
-            } break;
-            case ESP_ERR_WIFI_SSID: {
-                printf("ESP_ERR_WIFI_SSID'\n");
-            } break;
-            case ESP_OK: {
-                printf("ESP_OK'\n");
-            } break;
-            default: {
-                printf("UNKNOWN RETURN TYPE!\n");
-            }
-        }
+        ESP_ERROR_CHECK(esp_wifi_connect());
 
         vTaskDelay(7500 / portTICK_RATE_MS);
     }
