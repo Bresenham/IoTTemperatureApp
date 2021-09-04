@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
 
 #include "freertos/FreeRTOS.h"
 
@@ -20,6 +21,8 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
+#include <netdb.h>
+
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
@@ -30,6 +33,65 @@
 TaskHandle_t wifi_scan_task_hndl = NULL;
 TaskHandle_t wifi_connect_task_hndl = NULL;
 TaskHandle_t i2c_bmp280_task_hndl = NULL;
+
+#define WEB_SERVER      "localhost"
+#define WEB_ENDPOINT    "/sensor/add"
+#define WEB_PORT        80
+
+static void ICACHE_FLASH_ATTR temp_post_req(uint32_t temp) {
+
+    /*
+    POST /sensor/add HTTP/1.1
+    HOST: localhost
+    Content-Type:application/json
+    Accept:application/json
+
+    { "id": 1, "value": 2505, "auth_key": "" }
+    */
+
+    char request_buffer[256];
+    snprintf(request_buffer, sizeof(request_buffer), "POST %s HTTP/1.1\r\nHOST: %s\r\nContent-Type:application/json\r\nAccept:application/json\r\n\r\n{\"id\": 1,\"value\": %d,\"auth_key\": \"\"}\r\n", WEB_ENDPOINT, WEB_SERVER, temp);
+
+    const struct addrinfo addr_inf = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_STREAM,
+    };
+
+    struct addrinfo *res;
+    struct in_addr *addr;
+
+    int err = getaddrinfo(WEB_SERVER, WEB_PORT, &addr_inf, &res);
+    if(err != 0 || res == NULL) {
+        printf("DNS lookup failed err=%d res=%p\n", err, res);
+        return;
+    }
+
+    addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+    printf("DNS lookup succeeded. IP=%s\n", inet_ntoa(*addr));
+
+    const int sckt = socket(res->ai_family, res->ai_socktype, 0);
+    if(sckt < 0) {
+        printf("Failed to allocate socket\n");
+        freeaddrinfo(res);
+        return;
+    }
+
+    if( connect(sckt, res->ai_addr, res->ai_addrlen) != 0 ) {
+        printf("Socket failed to connect errno=%d\n", errno);
+        close(sckt);
+        freeaddrinfo(res);
+        return;
+    }
+
+    freeaddrinfo(res);
+
+    if( write(sckt, request_buffer, strlen(request_buffer)) < 0 ) {
+        printf("Socket send failed\n");
+        close(sckt);
+    }
+
+    close(sckt);
+}
 
 static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
 
@@ -43,9 +105,9 @@ static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
 
         const int32_t temp = bmp280.getTemperature(&bmp280);
 
-        // dtostrf(temp, 4, 2, float_str);
-
         printf("T32: %d\n", temp);
+
+        temp_post_req(temp);
 
         vTaskDelay(2000 / portTICK_RATE_MS);
     }
