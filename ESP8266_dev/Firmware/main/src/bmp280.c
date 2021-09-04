@@ -241,7 +241,7 @@ int8_t bmp280_init(struct bmp280_dev *dev)
     rslt = null_ptr_check(dev);
     if (rslt == BMP280_OK)
     {
-        while (try_count)
+        while (try_count > 0)
         {
             rslt = bmp280_get_regs(BMP280_CHIP_ID_ADDR, &dev->chip_id, 1, dev);
 
@@ -253,8 +253,11 @@ int8_t bmp280_init(struct bmp280_dev *dev)
                 if (rslt == BMP280_OK)
                 {
                     rslt = get_calib_param(dev);
+                    if((rslt == BMP280_OK)
+                        && (dev->calib_param.dig_t1 != 0 && dev->calib_param.dig_t2 != 0 && dev->calib_param.dig_t3 != 0) ) {
+                        break;
+                    }
                 }
-                break;
             }
 
             /* Wait for 10 ms */
@@ -263,12 +266,9 @@ int8_t bmp280_init(struct bmp280_dev *dev)
         }
 
         /* Chip id check failed, and timed out */
-        if (!try_count)
-        {
+        if (try_count == 0) {
             rslt = BMP280_E_DEV_NOT_FOUND;
-        }
-        if (rslt == BMP280_OK)
-        {
+        } else if (rslt == BMP280_OK) {
             /* Set values to default */
             dev->conf.filter = BMP280_FILTER_OFF;
             dev->conf.os_pres = BMP280_OS_NONE;
