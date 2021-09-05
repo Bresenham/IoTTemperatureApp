@@ -12,7 +12,7 @@ router.route('/').get((req, res) => {
 
 router.route('/add').post((req, res) => {
 
-    params = ["id", "value", "auth_key"];
+    const params = ["id", "value", "auth_key"];
 
     missing_params = [];
     params.forEach(param => {
