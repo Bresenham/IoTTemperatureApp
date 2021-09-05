@@ -12,9 +12,17 @@ router.route('/').get((req, res) => {
 
 router.route('/add').post((req, res) => {
 
-    if( !req.body.hasOwnProperty('id') || !req.body.hasOwnProperty('value') || !req.body.hasOwnProperty('auth_key') ) {
+    params = ["id", "value", "auth_key"];
 
-        res.status(400).json("Missing parameters.");
+    missing_params = [];
+    params.forEach(param => {
+        if( !(param in req.body) ) {
+            missing_params.push(param);
+        }
+    });
+
+    if( missing_params.length > 0 ) {
+        res.status(400).json("Missing parameters: " + missing_params);
         return;
     }
 

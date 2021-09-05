@@ -8,9 +8,11 @@ const fs = require('fs');
 const fill_default_data = process.env.TEST;
 
 const app = express();
-app.use(bodyParser.json())
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-const port = 3000
+const port = 3000;
+const ip = "192.168.0.103";
 
 // Set up CORS
 app.use(cors({
@@ -35,8 +37,8 @@ const Sensor = require('./models/sensor');
 app.use('/sensor', sensorRouter);
 app.use('/data', dataRouter);
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+app.listen(port, ip, () => {
+  console.log(`Example app listening at http://${ip}:${port}`)
 })
 
 mongoose.connect("mongodb://127.0.0.1:27017/",{
@@ -46,6 +48,8 @@ mongoose.connect("mongodb://127.0.0.1:27017/",{
 ).then(() => {
     console.log('Database Successfully Connected')
     if(fill_default_data) {
+
+      console.log("Filling default data...");
 
       Sensor.create(
         JSON.parse(fs.readFileSync(path.resolve(__dirname, 'test_sensors.json'), 'utf8'))

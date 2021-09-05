@@ -34,23 +34,17 @@ TaskHandle_t wifi_scan_task_hndl = NULL;
 TaskHandle_t wifi_connect_task_hndl = NULL;
 TaskHandle_t i2c_bmp280_task_hndl = NULL;
 
-#define WEB_SERVER      "localhost"
+#define WEB_SERVER      "192.168.0.103"
 #define WEB_ENDPOINT    "/sensor/add"
-#define WEB_PORT        80
+#define WEB_PORT        "3000"
 
 static void ICACHE_FLASH_ATTR temp_post_req(uint32_t temp) {
 
-    /*
-    POST /sensor/add HTTP/1.1
-    HOST: localhost
-    Content-Type:application/json
-    Accept:application/json
-
-    { "id": 1, "value": 2505, "auth_key": "" }
-    */
+    char request_body[64];
+    snprintf(request_body, sizeof(request_body), "{\"id\": 1,\"value\": %d,\"auth_key\": \"\"}", temp);
 
     char request_buffer[256];
-    snprintf(request_buffer, sizeof(request_buffer), "POST %s HTTP/1.1\r\nHOST: %s\r\nContent-Type:application/json\r\nAccept:application/json\r\n\r\n{\"id\": 1,\"value\": %d,\"auth_key\": \"\"}\r\n", WEB_ENDPOINT, WEB_SERVER, temp);
+    snprintf(request_buffer, sizeof(request_buffer), "POST %s HTTP/1.1\r\nHOST: %s\r\nContent-Type:application/json\r\nAccept:application/json\r\nContent-Length: %d\r\n\r\n%s\r\n", WEB_ENDPOINT, WEB_SERVER, strlen(request_body), request_body);
 
     const struct addrinfo addr_inf = {
         .ai_family = AF_INET,
@@ -90,6 +84,29 @@ static void ICACHE_FLASH_ATTR temp_post_req(uint32_t temp) {
         close(sckt);
     }
 
+    struct timeval receiving_timeout;
+    receiving_timeout.tv_sec = 5;
+    receiving_timeout.tv_usec = 0;
+    if (setsockopt(sckt, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout, sizeof(receiving_timeout)) < 0) {
+        printf("Failed to set socket receive timeout!\n");
+        close(sckt);
+        return;
+    }
+
+    printf("Successfully sent request:\n%s\n", request_buffer);
+
+    printf("Received from Socket:\n");
+    char recv_buf[128];
+    int ret = 0;
+    /* Read HTTP response */
+    do {
+        bzero(recv_buf, sizeof(recv_buf));
+        ret = read(sckt, recv_buf, sizeof(recv_buf)-1);
+        for(int i = 0; i < ret; i++) {
+            putchar(recv_buf[i]);
+        }
+    } while(ret > 0);
+
     close(sckt);
 }
 
@@ -109,7 +126,7 @@ static void ICACHE_FLASH_ATTR i2c_bmp280_task(void *arg) {
 
         temp_post_req(temp);
 
-        vTaskDelay(2000 / portTICK_RATE_MS);
+        vTaskDelay(5000 / portTICK_RATE_MS);
     }
 }
 

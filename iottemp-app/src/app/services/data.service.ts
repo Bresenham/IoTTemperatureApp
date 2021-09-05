@@ -14,6 +14,6 @@ export class DataService {
   constructor(private http: HttpClient) {}
 
   getEntries() : Observable<Array<DataEntry>> {
-    return this.http.get<Array<DataEntry>>('http://localhost:3000/data')
+    return this.http.get<Array<DataEntry>>('http://192.168.0.103:3000/data')
   }
 }
