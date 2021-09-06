@@ -17,6 +17,7 @@ import { FilterCollectionComponent } from './ui/filter-collection/filter-collect
 import { FilterComponent } from './ui/filter/filter.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { MatIconModule } from '@angular/material/icon';
     MaterialModule,
     ReactiveFormsModule,
     FormsModule,
+    MatSelectModule,
     MatIconModule,
     MatPaginatorModule,
     HttpClientModule,

@@ -1,12 +1,12 @@
 <div *ngIf="filter === _FilterType.SensorSelectFilter" class="distance">
     <mat-form-field>
-        <mat-label>Cars</mat-label>
-        <select matNativeControl required>
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="mercedes">Mercedes</option>
-            <option value="audi">Audi</option>
-        </select>
+        <mat-label>Select Sensor</mat-label>
+        <mat-select [(value)]="selectedSensor">
+            <mat-option>All</mat-option>
+            <mat-option *ngFor="let sensor of sensors" [value]="sensor._id">
+                {{sensor._id}}
+            </mat-option>
+        </mat-select>
     </mat-form-field>
     <div style="display: inline-block;">
         <button mat-button>
