@@ -11,9 +11,9 @@ type TooltipFormatterParams = Parameters<TooltipFormatterCallback>[0]
 
 const dataFormatter: TooltipFormatterCallback = (params: TooltipFormatterParams) => {
   if (Array.isArray(params)) {
-    return params[0].data.toString() || 'no value';
+    return (params[0].data as any[])[1].toString() || 'no value';
   }
-  return params.data.toString() || '';
+  return (params.data as any[])[1].toString() || '';
 }
 
 const colors: string[] = ["#21ba45", "#009C95"];
@@ -76,6 +76,7 @@ export class GraphComponent implements OnInit {
           end: 100
         }],
         tooltip: {
+          trigger: "axis",
           formatter: dataFormatter
         },
         series : series as SeriesOption[]
