@@ -15,9 +15,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
 import { FilterCollectionComponent } from './ui/filter-collection/filter-collection.component';
 import { FilterComponent } from './ui/filter/filter.component';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [
@@ -35,9 +32,6 @@ import { MatSelectModule } from '@angular/material/select';
     MaterialModule,
     ReactiveFormsModule,
     FormsModule,
-    MatSelectModule,
-    MatIconModule,
-    MatPaginatorModule,
     HttpClientModule,
     NgxEchartsModule.forRoot({
       /**

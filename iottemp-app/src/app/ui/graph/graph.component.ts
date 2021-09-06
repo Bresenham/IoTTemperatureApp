@@ -50,12 +50,14 @@ export class GraphComponent implements OnInit {
         if(!seriesMap.has(entry.sensor._id)) {
           let cls : ChartLineSeries = new ChartLineSeries();
           cls.color = colors[entry.sensor._id % colors.length];
+          cls.name = `Sensor${entry.sensor._id}`;
           seriesMap.set(entry.sensor._id, cls);
         }
         seriesMap.get(entry.sensor._id)!.data.push([entry.datetime.toString(), entry.value]);
       });
 
-      let series = Array.from( seriesMap.values() );
+      let series = Array.from(seriesMap.values());
+      let legendData = series.map(ser => ser.name);
 
       this.chartOption = {
         calculable : true,
@@ -66,6 +68,9 @@ export class GraphComponent implements OnInit {
         xAxis: {
           type: 'time',
           boundaryGap: false
+        },
+        legend: {
+          data: legendData
         },
         dataZoom: [{
           type: 'inside',

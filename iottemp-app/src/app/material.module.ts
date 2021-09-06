@@ -12,6 +12,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list'
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
     imports: [
@@ -26,7 +28,9 @@ import { MatGridListModule } from '@angular/material/grid-list'
         MatFormFieldModule,
         MatInputModule,
         MatIconModule,
-        MatGridListModule
+        MatGridListModule,
+        MatPaginatorModule,
+        MatSelectModule
     ],
     exports: [
         MatButtonModule,
@@ -40,7 +44,9 @@ import { MatGridListModule } from '@angular/material/grid-list'
         MatFormFieldModule,
         MatInputModule,
         MatIconModule,
-        MatGridListModule
+        MatGridListModule,
+        MatPaginatorModule,
+        MatSelectModule
     ]
 })
 export class MaterialModule {}
