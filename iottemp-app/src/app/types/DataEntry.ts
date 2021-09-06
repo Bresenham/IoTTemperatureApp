@@ -1,7 +1,7 @@
 import { Sensor } from './Sensor';
 
 export interface DataEntry {
-    datetime: string,
+    datetime: Date,
     sensor: Sensor,
     value: number
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { EChartsOption } from 'echarts';
+import { EChartsOption, SeriesOption } from 'echarts';
 import { TooltipComponentOption } from 'echarts/components'
 
 import { DataEntry } from 'src/app/types/DataEntry';
@@ -16,6 +16,17 @@ const dataFormatter: TooltipFormatterCallback = (params: TooltipFormatterParams)
   return params.data.toString() || '';
 }
 
+const colors: string[] = ["#21ba45", "#009C95"];
+
+class ChartLineSeries {
+  color: string = "#21ba45";
+  name: string = "Name";
+  type: string = "line";
+  smooth: boolean = false;
+  symbol: string = "none";
+  areaStyle: any = {};
+  data: any[] = [[]];
+}
 
 @Component({
   selector: 'app-graph',
@@ -34,26 +45,40 @@ export class GraphComponent implements OnInit {
     this.dataService.getEntries().subscribe(data => {
       this.entries = data;
 
-      const date_times: string[] = this.entries.map(e => e.datetime);
-      const values: number[] = this.entries.map(e => e.value);
+      let seriesMap = new Map<number, ChartLineSeries>();
+      this.entries.forEach(entry => {
+        if(!seriesMap.has(entry.sensor._id)) {
+          let cls : ChartLineSeries = new ChartLineSeries();
+          cls.color = colors[entry.sensor._id % colors.length];
+          seriesMap.set(entry.sensor._id, cls);
+        }
+        seriesMap.get(entry.sensor._id)!.data.push([entry.datetime.toString(), entry.value]);
+      });
+
+      let series = Array.from( seriesMap.values() );
 
       this.chartOption = {
-        xAxis: {
-          type: 'category',
-          data: date_times,
-        },
+        calculable : true,
         yAxis: {
           type: 'value',
+          boundaryGap: [0, '100%']
         },
+        xAxis: {
+          type: 'time',
+          boundaryGap: false
+        },
+        dataZoom: [{
+          type: 'inside',
+          start: 0,
+          end: 100
+        }, {
+          start: 0,
+          end: 100
+        }],
         tooltip: {
           formatter: dataFormatter
         },
-        series: [
-          {
-            data: values,
-            type: 'line',
-          },
-        ],
+        series : series as SeriesOption[]
       };
     });
   }
