@@ -16,7 +16,7 @@ const dataFormatter: TooltipFormatterCallback = (params: TooltipFormatterParams)
   return (params.data as any[])[1].toString() || '';
 }
 
-const colors: string[] = ["#21ba45", "#009C95"];
+const colors: string[] = ["#FF4081", "#3F51B5"];
 
 class ChartLineSeries {
   color: string = "#21ba45";
