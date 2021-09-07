@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { EChartsOption, SeriesOption } from 'echarts';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { ECharts, EChartsOption, SeriesOption } from 'echarts';
 import { TooltipComponentOption } from 'echarts/components'
 
 import { DataEntry } from 'src/app/types/DataEntry';
@@ -37,11 +37,39 @@ export class GraphComponent implements OnInit {
 
   entries: DataEntry[] = [];
 
+  chartOption: EChartsOption = {};
+
   constructor(private dataService: DataService) { }
 
-  chartOption!: EChartsOption;
-
   ngOnInit(): void {
+    this.chartOption = {
+      calculable : true,
+      yAxis: {
+        type: 'value',
+        boundaryGap: [0, '100%']
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      dataZoom: [{
+        type: 'inside',
+        start: 0,
+        end: 100
+      }, {
+        start: 0,
+        end: 100
+      }],
+      tooltip: {
+        trigger: "axis",
+        formatter: dataFormatter
+      },
+      legend: {
+        data: []
+      },
+      series: []
+    };
+
     this.dataService.dataFilteredObservable.subscribe(data => {
       this.entries = data;
 
@@ -59,33 +87,10 @@ export class GraphComponent implements OnInit {
       let series = Array.from(seriesMap.values());
       let legendData = series.map(ser => ser.name);
 
-      this.chartOption = {
-        calculable : true,
-        yAxis: {
-          type: 'value',
-          boundaryGap: [0, '100%']
-        },
-        xAxis: {
-          type: 'time',
-          boundaryGap: false
-        },
-        legend: {
-          data: legendData
-        },
-        dataZoom: [{
-          type: 'inside',
-          start: 0,
-          end: 100
-        }, {
-          start: 0,
-          end: 100
-        }],
-        tooltip: {
-          trigger: "axis",
-          formatter: dataFormatter
-        },
-        series : series as SeriesOption[]
-      };
+      this.chartOption.legend = { data: legendData };
+      this.chartOption.series = series as SeriesOption[];
+      // Trigger echart update
+      this.chartOption = Object.assign({}, this.chartOption);
     });
   }
 
