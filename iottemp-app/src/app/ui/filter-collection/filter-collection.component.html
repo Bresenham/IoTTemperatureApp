@@ -1,3 +1,7 @@
-Datefilter:
+<mat-label>Datefilter:</mat-label>
 <div style="display: inline-block; margin-right: 1rem;"></div>
-<app-filter [filter]="_FilterType.DateRangeFilter"></app-filter>
+<app-filter #dateRangeFilter [filter]="_FilterType.DateRangeFilter"></app-filter>
+<button mat-raised-button color="accent" (click)="onFilterApply()">
+    Apply
+    <mat-icon>filter_alt</mat-icon>
+</button>

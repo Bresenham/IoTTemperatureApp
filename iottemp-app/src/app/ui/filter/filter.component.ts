@@ -3,6 +3,7 @@ import { FilterType } from '../filter-collection/filter-collection.component'
 import { FormGroup, FormControl } from '@angular/forms';
 import { Sensor } from 'src/app/types/Sensor';
 import { DataService } from 'src/app/services/data.service';
+import { DataEntry } from 'src/app/types/DataEntry';
 
 @Component({
   selector: 'app-filter',
@@ -24,6 +25,11 @@ export class FilterComponent {
   });
 
   constructor(private dataService: DataService) { }
+
+  filterData(data : DataEntry[]) : DataEntry[] {
+    // Dummy filter
+    return data.slice(0, data.length - 1);
+  }
 
   ngOnInit(): void {
     this.dataService.getSensors().subscribe(sensors => {

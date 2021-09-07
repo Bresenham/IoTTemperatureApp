@@ -42,7 +42,7 @@ export class GraphComponent implements OnInit {
   chartOption!: EChartsOption;
 
   ngOnInit(): void {
-    this.dataService.getEntries().subscribe(data => {
+    this.dataService.dataFilteredObservable.subscribe(data => {
       this.entries = data;
 
       let seriesMap = new Map<number, ChartLineSeries>();

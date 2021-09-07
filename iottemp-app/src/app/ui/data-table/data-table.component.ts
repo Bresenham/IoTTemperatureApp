@@ -32,7 +32,7 @@ export class DataTableComponent implements OnInit {
   }
 
   ngOnInit() : void {
-    this.dataService.getEntries().subscribe(data => {
+    this.dataService.dataFilteredObservable.subscribe((data: DataEntry[]) => {
       this.entries = data;
       this.length = data.length;
       this.activeViewEntries = this.entries.slice(0, this.pageSize);
